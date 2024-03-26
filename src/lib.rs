@@ -1,4 +1,5 @@
 use bevy::{
+    asset::load_internal_asset,
 	core::FrameCount,
 	core_pipeline::{
 		core_3d::graph::{Core3d, Node3d},
@@ -32,10 +33,20 @@ pub struct CrtGaloreSettings {
 	pub resolution: Vec2,
 }
 
+
+// $ uuidgen
+pub const ENDESGA_PASS0_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(0xe280e380bdb74d6b85045cba17e4ba0cu128);
+pub const ENDESGA_PASS1_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(0xd509e7b0ae5743db8169573727464586u128);
+pub const ENDESGA_PASS2_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(0xf867645387c7435db10084e000805d0du128);
+
 pub struct CrtGalorePlugin;
 
 impl Plugin for CrtGalorePlugin {
 	fn build(&self, app: &mut App) {
+		load_internal_asset!(app, ENDESGA_PASS0_SHADER_HANDLE, "../assets/shaders/endesga/pass0.wgsl", Shader::from_wgsl);
+		load_internal_asset!(app, ENDESGA_PASS1_SHADER_HANDLE, "../assets/shaders/endesga/pass1.wgsl", Shader::from_wgsl);
+		load_internal_asset!(app, ENDESGA_PASS2_SHADER_HANDLE, "../assets/shaders/endesga/pass2.wgsl", Shader::from_wgsl);
+
 		app.add_plugins((
 			ExtractComponentPlugin::<CrtGaloreSettings>::default(),
 			UniformComponentPlugin::<CrtGaloreSettings>::default(),
@@ -92,31 +103,18 @@ impl ViewNode for CrtGaloreNode {
 
 		let pipeline_cache = world.resource::<PipelineCache>();
 
-		// Get the pipeline from the cache
-		let Some(pipeline0) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass0_pipeline_id)
-		else {
-			return Ok(());
-		};
-
-		let Some(pipeline1) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass1_pipeline_id)
-		else {
-			return Ok(());
-		};
-
-		let Some(pipeline2) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass2_pipeline_id)
-		else {
-			return Ok(());
-		};
+		let Some(pass0_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass0_pipeline_id) else { return Ok(()); };
+		let Some(pass1_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass1_pipeline_id) else { return Ok(()); };
+		let Some(pass2_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass2_pipeline_id) else { return Ok(());	};
 
 		let settings_uniforms = world.resource::<ComponentUniforms<CrtGaloreSettings>>();
-		let Some(settings_binding) = settings_uniforms.uniforms().binding() else {
-			return Ok(());
-		};
+
+		let Some(settings_binding) = settings_uniforms.uniforms().binding() else { return Ok(()); };
 
 		let post_process = view_target.post_process_write();
 
 		let bind_group = render_context.render_device().create_bind_group(
-			"post_process_bind_group",
+			"crt_galore_bind_group",
 			&post_process_pipeline.layout,
 			// It's important for this to match the BindGroupLayout defined in the PostProcessPipeline
 			&BindGroupEntries::sequential((
@@ -131,7 +129,7 @@ impl ViewNode for CrtGaloreNode {
 
 		{
 			let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-				label: Some("post_process_pass"),
+				label: Some("crt_galore_pass0"),
 				color_attachments: &[Some(RenderPassColorAttachment {
 					view: post_process.destination,
 					resolve_target: None,
@@ -142,7 +140,7 @@ impl ViewNode for CrtGaloreNode {
 				occlusion_query_set: None,
 			});
 
-			render_pass.set_render_pipeline(pipeline0);
+			render_pass.set_render_pipeline(pass0_pipeline);
 			render_pass.set_bind_group(0, &bind_group, &[]);
 			render_pass.draw(0..3, 0..1);
 		}
@@ -163,7 +161,7 @@ impl ViewNode for CrtGaloreNode {
 		);
 		{
 			let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-				label: Some("post_process_pass2"),
+				label: Some("crt_galore_pass1"),
 				color_attachments: &[Some(RenderPassColorAttachment {
 					view: post_process.destination,
 					resolve_target: None,
@@ -174,7 +172,7 @@ impl ViewNode for CrtGaloreNode {
 				occlusion_query_set: None,
 			});
 
-			render_pass.set_render_pipeline(pipeline1);
+			render_pass.set_render_pipeline(pass1_pipeline);
 			render_pass.set_bind_group(0, &bind_group, &[]);
 			render_pass.draw(0..3, 0..1);
 		}
@@ -194,7 +192,7 @@ impl ViewNode for CrtGaloreNode {
 		);
 		{
 			let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-				label: Some("post_process_pass3"),
+				label: Some("crt_galore_pass2"),
 				color_attachments: &[Some(RenderPassColorAttachment {
 					view: post_process.destination,
 					resolve_target: None,
@@ -205,7 +203,7 @@ impl ViewNode for CrtGaloreNode {
 				occlusion_query_set: None,
 			});
 
-			render_pass.set_render_pipeline(pipeline2);
+			render_pass.set_render_pipeline(pass2_pipeline);
 			render_pass.set_bind_group(0, &bind_group, &[]);
 			render_pass.draw(0..3, 0..1);
 		}
@@ -245,18 +243,10 @@ impl FromWorld for CrtGalorePipeline {
 		// We can create the sampler here since it won't change at runtime and doesn't depend on the view
 		let sampler = render_device.create_sampler(&SamplerDescriptor::default());
 
-		let shader0 = world
-			.resource::<AssetServer>()
-			.load("shaders/endesga/pass0.wgsl");
-
-		let shader1 = world
-			.resource::<AssetServer>()
-			.load("shaders/endesga/pass1.wgsl");
-
-		let shader2 = world
-			.resource::<AssetServer>()
-			.load("shaders/endesga/pass2.wgsl");
-
+		let shader0 = ENDESGA_PASS0_SHADER_HANDLE.clone();
+		let shader1 = ENDESGA_PASS1_SHADER_HANDLE.clone();
+		let shader2 = ENDESGA_PASS2_SHADER_HANDLE.clone();
+		
 		fn make_pipeline(
 			world: &mut World,
 			layout: &BindGroupLayout,
