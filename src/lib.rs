@@ -26,23 +26,24 @@ use bevy::{
 	window::PrimaryWindow,
 };
 
+// IMPORTANT! keep this in sync with settings.wgsl
 #[derive(Component, Default, Clone, Copy, ExtractComponent, ShaderType)]
 pub struct CrtGaloreSettings {
-	pub intensity: f32,
 	pub frame_count: u32,
 	pub resolution: Vec2,
 }
 
-
 // $ uuidgen
-pub const ENDESGA_PASS0_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(0xe280e380bdb74d6b85045cba17e4ba0cu128);
-pub const ENDESGA_PASS1_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(0xd509e7b0ae5743db8169573727464586u128);
-pub const ENDESGA_PASS2_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(0xf867645387c7435db10084e000805d0du128);
+pub const SETTINGS_SHADER_HANDLE		: Handle<Shader> = Handle::weak_from_u128(0x9a62c467e77c4d8eb486acc975a47304u128);
+pub const ENDESGA_PASS0_SHADER_HANDLE	: Handle<Shader> = Handle::weak_from_u128(0xe280e380bdb74d6b85045cba17e4ba0cu128);
+pub const ENDESGA_PASS1_SHADER_HANDLE	: Handle<Shader> = Handle::weak_from_u128(0xd509e7b0ae5743db8169573727464586u128);
+pub const ENDESGA_PASS2_SHADER_HANDLE	: Handle<Shader> = Handle::weak_from_u128(0xf867645387c7435db10084e000805d0du128);
 
 pub struct CrtGalorePlugin;
 
 impl Plugin for CrtGalorePlugin {
 	fn build(&self, app: &mut App) {
+		load_internal_asset!(app, SETTINGS_SHADER_HANDLE, "settings.wgsl", Shader::from_wgsl);
 		load_internal_asset!(app, ENDESGA_PASS0_SHADER_HANDLE, "../assets/shaders/endesga/pass0.wgsl", Shader::from_wgsl);
 		load_internal_asset!(app, ENDESGA_PASS1_SHADER_HANDLE, "../assets/shaders/endesga/pass1.wgsl", Shader::from_wgsl);
 		load_internal_asset!(app, ENDESGA_PASS2_SHADER_HANDLE, "../assets/shaders/endesga/pass2.wgsl", Shader::from_wgsl);
@@ -291,7 +292,6 @@ impl FromWorld for CrtGalorePipeline {
 
 
 fn update_settings(
-	time: Res<Time>,
 	frame_count: Res<FrameCount>,
 	q_window_primary: Query<&Window, With<PrimaryWindow>>,
 	mut settings: Query<&mut CrtGaloreSettings>
@@ -299,18 +299,6 @@ fn update_settings(
 	let Ok(window) = q_window_primary.get_single() else { return };
 
 	for mut setting in &mut settings {
-		let mut intensity = time.elapsed_seconds().sin();
-		// Make it loop periodically
-		intensity = intensity.sin();
-		// Remap it to 0..1 because the intensity can't be negative
-		intensity = intensity * 0.5 + 0.5;
-		// Scale it to a more reasonable level
-		intensity *= 0.015;
-
-		// Set the intensity.
-		// This will then be extracted to the render world and uploaded to the gpu automatically by the [`UniformComponentPlugin`]
-		setting.intensity = intensity;
-
 		setting.frame_count = frame_count.0;
 
 		setting.resolution = Vec2::new(window.resolution.width(), window.resolution.height());

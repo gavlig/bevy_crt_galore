@@ -1,4 +1,5 @@
 #import bevy_core_pipeline::fullscreen_vertex_shader::FullscreenVertexOutput
+#import bevy_crt_galore::CrtGaloreSettings
 
 const aberration_amount = 0.07;
 const noise_amount = 0.3;
@@ -8,15 +9,9 @@ alias vec2f = vec2<f32>;
 alias vec3f = vec3<f32>;
 alias vec4f = vec4<f32>;
 
-struct BevyGaloreSettings {
-	frame_count: u32,
-	intensity: f32,
-	resolution: vec2f
-}
-
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
-@group(0) @binding(2) var<uniform> settings: BevyGaloreSettings;
+@group(0) @binding(2) var<uniform> settings: CrtGaloreSettings;
 
 fn hash(p: vec3f) -> f32 {
 	var p_var = p;

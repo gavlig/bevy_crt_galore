@@ -1,4 +1,5 @@
 #import bevy_core_pipeline::fullscreen_vertex_shader::FullscreenVertexOutput
+#import bevy_crt_galore::CrtGaloreSettings
 
 alias vec2f = vec2<f32>;
 alias vec3f = vec3<f32>;
@@ -13,15 +14,9 @@ const G = vec3f( 0.0, 1.0, 0.0 );
 const B = vec3f( 0.0, 0.0, 1.0 );
 // var M = array<vec3f, 28>( X, X, X, X, X, X, X, X, R, R, G, G, B, B, X, R, R, G, G, B, B, X, R, R, G, G, B, B );
 
-struct BevyGaloreSettings {
-	frame_count: u32,
-	intensity: f32,
-	resolution: vec2f
-}
-
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
-@group(0) @binding(2) var<uniform> settings: BevyGaloreSettings;
+@group(0) @binding(2) var<uniform> settings: CrtGaloreSettings;
 
 fn modulo(a: f32, b: f32) -> f32 {
 	var m = a % b;
