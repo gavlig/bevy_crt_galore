@@ -29,9 +29,11 @@ fn modulo(a: f32, b: f32) -> f32 {
 
 @fragment
 fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
-	let frag_coord : vec2f = in.uv * settings.resolution.xy;
+	let resolution = vec2f(textureDimensions(screen_texture));
 
-	var uv : vec2f = floor(in.uv * (settings.resolution.xy / vec2f(7., 4.)));
+	let frag_coord : vec2f = in.uv * resolution.xy;
+
+	var uv : vec2f = floor(in.uv * (resolution.xy / vec2f(7., 4.)));
 
 	let hex_offset : f32 = modulo(uv.x, 2.0) * 2.;
 
@@ -42,11 +44,11 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 
 	for(var y = 0.0; y < 4.; y += 1.0) {
 		for(var x = 0.0; x < 7.; x += 1.0) {
-			output += textureSample(screen_texture, texture_sampler, ((uv * vec2f(7., 4.)) + vec2f(x, y)) / settings.resolution.xy);
+			output += textureSample(screen_texture, texture_sampler, ((uv * vec2f(7., 4.)) + vec2f(x, y)) / resolution.xy);
 		}
 	}
 
-	output = mix(textureSample(screen_texture, texture_sampler, frag_coord / settings.resolution.xy), output / 28., settings.pixelate_amount);
+	output = mix(textureSample(screen_texture, texture_sampler, frag_coord / resolution.xy), output / 28., settings.pixelate_amount);
 
 	// this should be const, waiting for resolution of this: https://github.com/gfx-rs/wgpu/issues/4337
 	var M = array<vec3f, 28>( X, X, X, X, X, X, X, X, R, R, G, G, B, B, X, R, R, G, G, B, B, X, R, R, G, G, B, B );

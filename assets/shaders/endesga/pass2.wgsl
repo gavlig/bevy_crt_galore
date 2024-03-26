@@ -23,7 +23,9 @@ fn modulo(a: f32, b: f32) -> f32 {
 
 @fragment
 fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
-	let frag_coord : vec2f = in.uv * settings.resolution.xy;
+    let resolution = vec2f(textureDimensions(screen_texture));
+
+	let frag_coord : vec2f = in.uv * resolution.xy;
 
 	var uv = (in.uv * 2.) - 1.;
 
@@ -42,7 +44,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 	for (var x = -3; x <= 3; x += 1) {
 		for (var y = -3; y <= 3; y += 1) {
 			output += weight[x + 3] * weight[y + 3] *
-				textureSample(screen_texture, texture_sampler, uv + vec2f(f32(x), f32(y)) * (1.0 / settings.resolution.xy));
+				textureSample(screen_texture, texture_sampler, uv + vec2f(f32(x), f32(y)) * (1.0 / resolution.xy));
 		}
 	}
 

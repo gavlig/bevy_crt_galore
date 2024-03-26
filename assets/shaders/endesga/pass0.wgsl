@@ -38,11 +38,13 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 		textureSample(screen_texture, texture_sampler, in.uv - 2. * aber_dis).b
 	);
 
-	let frag_coord: vec2f = in.uv * settings.resolution.xy;
+	let resolution = vec2f(textureDimensions(screen_texture));
 
- 	let radius: f32 = 0.07 * ((settings.resolution.x + settings.resolution.y) * 0.5) * 0.5;
+	let frag_coord: vec2f = in.uv * resolution.xy;
 
-	let screen_ratio_y = settings.resolution.y / settings.resolution.x;
+	let radius: f32 = 0.07 * ((resolution.x + resolution.y) * 0.5) * 0.5;
+
+	let screen_ratio_y = resolution.y / resolution.x;
 
 	let vignette_step = smoothstep(
 		0.25,
@@ -56,7 +58,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 		settings.vignette_amount
 	);
 
-	let half_res = settings.resolution / 2.0;
+	let half_res = resolution / 2.0;
 
 	let rounded_corners = step(
 		length(
