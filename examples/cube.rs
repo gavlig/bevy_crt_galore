@@ -1,9 +1,24 @@
-use bevy::prelude::*;
+use bevy::{ prelude::*, window :: PresentMode };
 use bevy_crt_galore::*;
+use iyes_perf_ui :: prelude :: *;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, CrtGalorePlugin))
+        .add_plugins((
+			DefaultPlugins.set(WindowPlugin {
+				primary_window: Some(Window {
+					present_mode: PresentMode::AutoNoVsync,
+					..default()
+				}),
+				..default()
+			}),
+
+            CrtGalorePlugin,
+            PerfUiPlugin,
+
+			bevy::diagnostic::FrameTimeDiagnosticsPlugin,
+	        bevy::diagnostic::SystemInformationDiagnosticsPlugin,
+        ))
         .add_systems(Startup, setup)
         .add_systems(Update, rotate)
         .run();
@@ -30,16 +45,7 @@ fn setup(
         //
         // This component is also used to determine on which camera to run the
         // post processing effect.
-        CrtGaloreSettings {
-			aberration_amount	: 0.02,
-			noise_amount		: 0.7,
-			vignette_amount		: 0.7,
-			pixelate_amount		: 0.7,
-			mask_amount			: 0.7,
-			distortion_amount	: 0.07,
-			bloom_amount		: 0.7,
-            ..default()
-        },
+        CrtGaloreSettings::STRONG,
     ));
 
     // cube
@@ -57,6 +63,17 @@ fn setup(
         transform: Transform::from_translation(Vec3::new(0.0, 0.0, 10.0)),
         ..default()
     });
+    // diagnostics
+	commands.spawn((
+	    PerfUiRoot { position : PerfUiPosition::BottomLeft, ..default() },
+	    PerfUiEntryFPS::default(),
+	    PerfUiEntryFPSWorst::default(),
+	    PerfUiEntryFrameTime::default(),
+	    PerfUiEntryFrameTimeWorst::default(),
+	    PerfUiEntryFrameCount::default(),
+	    PerfUiEntryCpuUsage::default(),
+	    PerfUiEntryMemUsage::default(),
+	));
 }
 
 #[derive(Component)]

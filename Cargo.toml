@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.13" }
+
+[dev-dependencies]
+iyes_perf_ui = { version = "0.2.3" }

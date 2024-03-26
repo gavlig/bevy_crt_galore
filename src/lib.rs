@@ -1,3 +1,5 @@
+use std::ops;
+
 use bevy::{
     asset::load_internal_asset,
 	core_pipeline::{
@@ -26,7 +28,7 @@ use bevy::{
 };
 
 // IMPORTANT! keep this in sync with settings.wgsl
-#[derive(Component, Default, Clone, Copy, ExtractComponent, ShaderType)]
+#[derive(Component, Clone, Copy, ExtractComponent, ShaderType)]
 pub struct CrtGaloreSettings {
 	pub aberration_amount	: f32,
 	pub noise_amount		: f32,
@@ -36,6 +38,79 @@ pub struct CrtGaloreSettings {
 	pub mask_amount			: f32,
 	pub distortion_amount	: f32,
 	pub glow_amount			: f32,
+}
+
+impl CrtGaloreSettings {
+	pub const STRONG : Self = Self {
+		aberration_amount	: 0.07,
+		noise_amount		: 0.7,
+		vignette_amount		: 0.7,
+		rounded_amount		: 0.07,
+		pixelate_amount		: 0.7,
+		mask_amount			: 0.7,
+		distortion_amount	: 0.07,
+		glow_amount			: 3.0,
+	};
+
+    pub const MILD : Self = Self {
+		aberration_amount	: 0.005,
+		noise_amount		: 0.05,
+		vignette_amount		: 0.7,
+		rounded_amount		: 0.07,
+		pixelate_amount		: 0.1,
+		mask_amount			: 0.1,
+		distortion_amount	: 0.01,
+		glow_amount			: 1.7,
+	};
+
+	pub fn new(preset: CrtGalorePreset) -> Self {
+		match preset {
+			CrtGalorePreset::Mild => CrtGaloreSettings::MILD,
+			CrtGalorePreset::Strong => CrtGaloreSettings::STRONG,
+		}
+	}
+
+	pub fn with_scale(mut self, scale: f32) -> Self {
+		self = self * scale;
+		self
+	}
+
+	pub fn set_preset_scaled(&mut self, preset: CrtGalorePreset, scale: f32) {
+		*self = CrtGaloreSettings::new(preset).with_scale(scale);
+	}
+}
+
+impl ops::Mul<f32> for CrtGaloreSettings {
+	type Output = CrtGaloreSettings;
+
+	fn mul(self, rhs: f32) -> Self::Output {
+		let scale = rhs.max(0.01);
+		
+		let glow_amount = (self.glow_amount * scale).max(1.0);
+
+		Self::Output {
+			aberration_amount	: self.aberration_amount	* scale,
+			noise_amount		: self.noise_amount			* scale,
+			vignette_amount		: self.vignette_amount		* scale,
+			rounded_amount		: self.rounded_amount		* scale,
+			pixelate_amount		: self.pixelate_amount		* scale,
+			mask_amount			: self.mask_amount			* scale,
+			distortion_amount	: self.distortion_amount	* scale,
+			glow_amount,
+		}
+    }
+}
+
+impl Default for CrtGaloreSettings {
+	fn default() -> Self {
+        CrtGaloreSettings::STRONG
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum CrtGalorePreset {
+	Mild,
+	Strong
 }
 
 // $ uuidgen
