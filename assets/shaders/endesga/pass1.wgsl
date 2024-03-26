@@ -1,3 +1,6 @@
+// REALISTIC SUB-PIXEL OLD CRT by ENDESGA shadertoy: https://www.shadertoy.com/view/ms2fDV (Buffer B)
+// Adapted to WGSL for Bevy by gavlig
+
 #import bevy_core_pipeline::fullscreen_vertex_shader::FullscreenVertexOutput
 #import bevy_render::globals::Globals
 #import bevy_crt_galore::CrtGaloreSettings
