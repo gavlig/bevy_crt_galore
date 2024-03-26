@@ -41,20 +41,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 
 	let AA : f32 = 0.5 * length(vec2f(dpdx(v), dpdy(v)));
 
-	var output = vec4f(0.);
-	var weight = array<f32, 7>(0.25, 0.5, 1.0, 2.0, 1.0, 0.5, 0.25);
-	for (var x = -3; x <= 3; x += 1) {
-		for (var y = -3; y <= 3; y += 1) {
-			output += weight[x + 3] * weight[y + 3] *
-				textureSample(screen_texture, texture_sampler, uv + vec2f(f32(x), f32(y)) * (1.0 / resolution.xy));
-		}
-	}
-
-	return mix(
-		textureSample(screen_texture, texture_sampler, uv),
-		output / 7.,
-		settings.bloom_amount * settings.mask_amount
-	)
+	return textureSample(screen_texture, texture_sampler, uv) * settings.glow_amount
 	// barrel-distortion mask
 	* smoothstep( -AA, AA, v );
 

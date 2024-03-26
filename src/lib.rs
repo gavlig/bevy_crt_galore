@@ -31,10 +31,11 @@ pub struct CrtGaloreSettings {
 	pub aberration_amount	: f32,
 	pub noise_amount		: f32,
 	pub vignette_amount		: f32,
+	pub rounded_amount		: f32,
 	pub pixelate_amount		: f32,
 	pub mask_amount			: f32,
 	pub distortion_amount	: f32,
-	pub bloom_amount		: f32,
+	pub glow_amount			: f32,
 }
 
 // $ uuidgen
@@ -67,9 +68,9 @@ impl Plugin for CrtGalorePlugin {
 			.add_render_graph_edges(
 				Core3d,
 				(
-					Node3d::Tonemapping,
+					Node3d::EndMainPass,
 					CrtGaloreLabel,
-					Node3d::EndMainPassPostProcessing,
+					Node3d::Bloom,
 				),
 			);
 	}

@@ -44,8 +44,6 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 
 	let frag_coord: vec2f = in.uv * resolution.xy;
 
-	let radius: f32 = 0.07 * ((resolution.x + resolution.y) * 0.5) * 0.5;
-
 	let screen_ratio_y = resolution.y / resolution.x;
 
 	let vignette_step = smoothstep(
@@ -61,6 +59,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 	);
 
 	let half_res = resolution / 2.0;
+	let radius = settings.rounded_amount * ((resolution.x + resolution.y) * 0.5) * 0.5;
 
 	let rounded_corners = step(
 		length(
