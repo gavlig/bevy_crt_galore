@@ -1,10 +1,6 @@
 #import bevy_core_pipeline::fullscreen_vertex_shader::FullscreenVertexOutput
 #import bevy_crt_galore::CrtGaloreSettings
 
-const aberration_amount = 0.07;
-const noise_amount = 0.3;
-const vignette_amount = 0.7;
-
 alias vec2f = vec2<f32>;
 alias vec3f = vec3<f32>;
 alias vec4f = vec4<f32>;
@@ -35,7 +31,7 @@ fn grain(x: vec3f) -> f32 {
 
 @fragment
 fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
-	let aber_dis: vec2f = (in.uv - vec2f(0.5)) * aberration_amount * length(in.uv - 0.5);
+	let aber_dis: vec2f = (in.uv - vec2f(0.5)) * settings.aberration_amount * length(in.uv - 0.5);
 	let aberration: vec3f = vec3f(
 		textureSample(screen_texture, texture_sampler, in.uv).r,
 		textureSample(screen_texture, texture_sampler, in.uv - aber_dis).g,
@@ -57,7 +53,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 	let vignette = mix(
 		1.0,
 		1.0 - clamp(vignette_step, 0.0, 1.0),
-		vignette_amount
+		settings.vignette_amount
 	);
 
 	let half_res = settings.resolution / 2.0;
@@ -79,7 +75,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 		grain(vec3f(frag_coord, frame - 9.0))
 	);
 
-	let aberration_wgrain = mix(aberration, mix(aberration * rgb_grain, aberration + (rgb_grain - 1.0), 0.5), noise_amount);
+	let aberration_wgrain = mix(aberration, mix(aberration * rgb_grain, aberration + (rgb_grain - 1.0), 0.5), settings.noise_amount);
 
 	return vec4f(aberration_wgrain * vignette * rounded_corners, 1.0);
 }

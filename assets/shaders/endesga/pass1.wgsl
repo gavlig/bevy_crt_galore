@@ -5,9 +5,6 @@ alias vec2f = vec2<f32>;
 alias vec3f = vec3<f32>;
 alias vec4f = vec4<f32>;
 
-const pixelate_amount = 0.7;
-const mask_amount = 0.7;
-
 const X = vec3f( 0.0 );
 const R = vec3f( 1.0, 0.0, 0.0 );
 const G = vec3f( 0.0, 1.0, 0.0 );
@@ -49,7 +46,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 		}
 	}
 
-	output = mix(textureSample(screen_texture, texture_sampler, frag_coord / settings.resolution.xy), output / 28., pixelate_amount);
+	output = mix(textureSample(screen_texture, texture_sampler, frag_coord / settings.resolution.xy), output / 28., settings.pixelate_amount);
 
 	// this should be const, waiting for resolution of this: https://github.com/gfx-rs/wgpu/issues/4337
 	var M = array<vec3f, 28>( X, X, X, X, X, X, X, X, R, R, G, G, B, B, X, R, R, G, G, B, B, X, R, R, G, G, B, B );
@@ -61,7 +58,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 			i32(modulo(frag_coord.y + hex_offset, 4.0)) * 7 +
 			i32(modulo(frag_coord.x, 7.0))
 		)],
-		mask_amount
+		settings.mask_amount
 	);
 
 	return vec4f(output_rgb, output.w);

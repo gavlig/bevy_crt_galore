@@ -5,10 +5,6 @@ alias vec2f = vec2<f32>;
 alias vec3f = vec3<f32>;
 alias vec4f = vec4<f32>;
 
-const mask_amount = 0.7;
-const distortion_amount = 0.07;
-const bloom_amount = 0.7;
-
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
 @group(0) @binding(2) var<uniform> settings: CrtGaloreSettings;
@@ -33,9 +29,9 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 
 	let r = length(uv);
 
-	uv /= (2. * distortion_amount * r * r);
+	uv /= (2. * settings.distortion_amount * r * r);
 
-	uv = ((uv * (1. - sqrt(1. - 4. * distortion_amount * r * r))) + 1.) / 2.;
+	uv = ((uv * (1. - sqrt(1. - 4. * settings.distortion_amount * r * r))) + 1.) / 2.;
 
 	let v : f32 = min(min(uv.x, 1. - uv.x), min(uv.y, 1. - uv.y));
 
@@ -50,8 +46,12 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 		}
 	}
 
-	return mix(textureSample(screen_texture, texture_sampler, uv), output / 7., bloom_amount * mask_amount)
-		// barrel-distortion mask
-		* smoothstep( -AA, AA, v );
+	return mix(
+		textureSample(screen_texture, texture_sampler, uv),
+		output / 7.,
+		settings.bloom_amount * settings.mask_amount
+	)
+	// barrel-distortion mask
+	* smoothstep( -AA, AA, v );
 
 }

@@ -29,8 +29,15 @@ use bevy::{
 // IMPORTANT! keep this in sync with settings.wgsl
 #[derive(Component, Default, Clone, Copy, ExtractComponent, ShaderType)]
 pub struct CrtGaloreSettings {
-	pub frame_count: u32,
-	pub resolution: Vec2,
+	pub frame_count			: u32,
+	pub resolution			: Vec2,
+	pub aberration_amount	: f32,
+	pub noise_amount		: f32,
+	pub vignette_amount		: f32,
+	pub pixelate_amount		: f32,
+	pub mask_amount			: f32,
+	pub distortion_amount	: f32,
+	pub bloom_amount		: f32,
 }
 
 // $ uuidgen
