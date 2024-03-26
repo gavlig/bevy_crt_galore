@@ -111,33 +111,39 @@ impl ViewNode for CrtGaloreNode {
 
 		let pipeline_cache = world.resource::<PipelineCache>();
 
-		let Some(pass0_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass0_pipeline_id) else { return Ok(()); };
-		let Some(pass1_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass1_pipeline_id) else { return Ok(()); };
-		let Some(pass2_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass2_pipeline_id) else { return Ok(());	};
+		let Some(pass0_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass0_pipeline_id) else { return Ok(()) };
+		let Some(pass1_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass1_pipeline_id) else { return Ok(()) };
+		let Some(pass2_pipeline) = pipeline_cache.get_render_pipeline(post_process_pipeline.pass2_pipeline_id) else { return Ok(()) };
 
 		let settings_uniforms = world.resource::<ComponentUniforms<CrtGaloreSettings>>();
 
-		let Some(settings_binding) = settings_uniforms.uniforms().binding() else { return Ok(()); };
+		let Some(settings_binding) = settings_uniforms.uniforms().binding() else { return Ok(()) };
+		
+		let globals_buffer = world.resource::<GlobalsBuffer>();
+		
+		let Some(global_uniforms) = globals_buffer.buffer.binding() else { return Ok(()) };
 
-		let post_process = view_target.post_process_write();
+		let mut envoke_render_pass = |pipeline: &RenderPipeline, name: &str| {
+			let post_process = view_target.post_process_write();
 
-		let bind_group = render_context.render_device().create_bind_group(
-			"crt_galore_bind_group",
-			&post_process_pipeline.layout,
-			// It's important for this to match the BindGroupLayout defined in the PostProcessPipeline
-			&BindGroupEntries::sequential((
-				// Make sure to use the source view
-				post_process.source,
-				// Use the sampler created for the pipeline
-				&post_process_pipeline.sampler,
-				// Set the settings binding
-				settings_binding.clone(),
-			)),
-		);
+			let bind_group = render_context.render_device().create_bind_group(
+				"crt_galore_bind_group",
+				&post_process_pipeline.layout,
+				// It's important for this to match the BindGroupLayout defined in the PostProcessPipeline
+				&BindGroupEntries::sequential((
+					// Make sure to use the source view
+					post_process.source,
+					// Use the sampler created for the pipeline
+					&post_process_pipeline.sampler,
+					// Set the settings binding
+					settings_binding.clone(),
+					// Bevy default global uniforms
+					global_uniforms.clone(),
+				)),
+			);
 
-		{
 			let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-				label: Some("crt_galore_pass0"),
+				label: Some(name),
 				color_attachments: &[Some(RenderPassColorAttachment {
 					view: post_process.destination,
 					resolve_target: None,
@@ -148,73 +154,14 @@ impl ViewNode for CrtGaloreNode {
 				occlusion_query_set: None,
 			});
 
-			render_pass.set_render_pipeline(pass0_pipeline);
+			render_pass.set_render_pipeline(pipeline);
 			render_pass.set_bind_group(0, &bind_group, &[]);
 			render_pass.draw(0..3, 0..1);
-		}
+		};
 
-
-		// second render pass
-
-		let post_process = view_target.post_process_write();
-
-		let bind_group = render_context.render_device().create_bind_group(
-			"post_process_bind_group2",
-			&post_process_pipeline.layout,
-			&BindGroupEntries::sequential((
-				post_process.source,
-				&post_process_pipeline.sampler,
-				settings_binding.clone(),
-			)),
-		);
-		{
-			let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-				label: Some("crt_galore_pass1"),
-				color_attachments: &[Some(RenderPassColorAttachment {
-					view: post_process.destination,
-					resolve_target: None,
-					ops: Operations::default(),
-				})],
-				depth_stencil_attachment: None,
-				timestamp_writes: None,
-				occlusion_query_set: None,
-			});
-
-			render_pass.set_render_pipeline(pass1_pipeline);
-			render_pass.set_bind_group(0, &bind_group, &[]);
-			render_pass.draw(0..3, 0..1);
-		}
-
-		// third render pass
-
-		let post_process = view_target.post_process_write();
-
-		let bind_group = render_context.render_device().create_bind_group(
-			"post_process_bind_group3",
-			&post_process_pipeline.layout,
-			&BindGroupEntries::sequential((
-				post_process.source,
-				&post_process_pipeline.sampler,
-				settings_binding.clone(),
-			)),
-		);
-		{
-			let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-				label: Some("crt_galore_pass2"),
-				color_attachments: &[Some(RenderPassColorAttachment {
-					view: post_process.destination,
-					resolve_target: None,
-					ops: Operations::default(),
-				})],
-				depth_stencil_attachment: None,
-				timestamp_writes: None,
-				occlusion_query_set: None,
-			});
-
-			render_pass.set_render_pipeline(pass2_pipeline);
-			render_pass.set_bind_group(0, &bind_group, &[]);
-			render_pass.draw(0..3, 0..1);
-		}
+		envoke_render_pass(pass0_pipeline, "crt_galore_pass0");
+		envoke_render_pass(pass1_pipeline, "crt_galore_pass1");
+		envoke_render_pass(pass2_pipeline, "crt_galore_pass2");
 
 		Ok(())
 	}
