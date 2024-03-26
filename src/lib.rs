@@ -1,6 +1,5 @@
 use bevy::{
     asset::load_internal_asset,
-	core::FrameCount,
 	core_pipeline::{
 		core_3d::graph::{Core3d, Node3d},
 		fullscreen_vertex_shader::fullscreen_shader_vertex_state,
@@ -19,18 +18,16 @@ use bevy::{
 			*,
 		},
 		renderer::{RenderContext, RenderDevice},
+		globals::{GlobalsBuffer, GlobalsUniform},
 		texture::BevyDefault,
 		view::ViewTarget,
 		RenderApp,
 	},
-	window::PrimaryWindow,
 };
 
 // IMPORTANT! keep this in sync with settings.wgsl
 #[derive(Component, Default, Clone, Copy, ExtractComponent, ShaderType)]
 pub struct CrtGaloreSettings {
-	pub frame_count			: u32,
-	pub resolution			: Vec2,
 	pub aberration_amount	: f32,
 	pub noise_amount		: f32,
 	pub vignette_amount		: f32,
@@ -59,8 +56,6 @@ impl Plugin for CrtGalorePlugin {
 			ExtractComponentPlugin::<CrtGaloreSettings>::default(),
 			UniformComponentPlugin::<CrtGaloreSettings>::default(),
 		));
-
-		app.add_systems(Update, update_settings);
 
 		let Ok(render_app) = app.get_sub_app_mut(RenderApp) else { return; };
 
@@ -191,6 +186,8 @@ impl FromWorld for CrtGalorePipeline {
 					sampler(SamplerBindingType::Filtering),
 					// The settings uniform that will control the effect
 					uniform_buffer::<CrtGaloreSettings>(false),
+					// Default bevy globals
+					uniform_buffer::<GlobalsUniform>(false)
 				),
 			),
 		);
@@ -241,20 +238,5 @@ impl FromWorld for CrtGalorePipeline {
 			pass1_pipeline_id: pipeline1_id,
 			pass2_pipeline_id: pipeline2_id,
 		}
-	}
-}
-
-
-fn update_settings(
-	frame_count: Res<FrameCount>,
-	q_window_primary: Query<&Window, With<PrimaryWindow>>,
-	mut settings: Query<&mut CrtGaloreSettings>
-) {
-	let Ok(window) = q_window_primary.get_single() else { return };
-
-	for mut setting in &mut settings {
-		setting.frame_count = frame_count.0;
-
-		setting.resolution = Vec2::new(window.resolution.width(), window.resolution.height());
 	}
 }

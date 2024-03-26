@@ -1,4 +1,5 @@
 #import bevy_core_pipeline::fullscreen_vertex_shader::FullscreenVertexOutput
+#import bevy_render::globals::Globals
 #import bevy_crt_galore::CrtGaloreSettings
 
 alias vec2f = vec2<f32>;
@@ -8,6 +9,7 @@ alias vec4f = vec4<f32>;
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
 @group(0) @binding(2) var<uniform> settings: CrtGaloreSettings;
+@group(0) @binding(3) var<uniform> globals: Globals;
 
 fn hash(p: vec3f) -> f32 {
 	var p_var = p;
@@ -70,7 +72,7 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
 		0.0
 	);
 
-	let frame: f32 = floor(f32(settings.frame_count));
+	let frame: f32 = floor(f32(globals.frame_count));
 	let rgb_grain = vec3f(
 		grain(vec3f(frag_coord, frame)),
 		grain(vec3f(frag_coord, frame + 9.0)),
