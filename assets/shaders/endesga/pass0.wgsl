@@ -3,7 +3,7 @@
 
 #import bevy_core_pipeline::fullscreen_vertex_shader::FullscreenVertexOutput
 #import bevy_render::globals::Globals
-#import bevy_crt_galore::CrtGaloreSettings
+#import bevy_crt_galore::endesga::CrtSettings
 
 alias vec2f = vec2<f32>;
 alias vec3f = vec3<f32>;
@@ -11,7 +11,7 @@ alias vec4f = vec4<f32>;
 
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
-@group(0) @binding(2) var<uniform> settings: CrtGaloreSettings;
+@group(0) @binding(2) var<uniform> settings: CrtSettings;
 @group(0) @binding(3) var<uniform> globals: Globals;
 
 fn hash(p: vec3f) -> f32 {

@@ -1,6 +1,6 @@
-#define_import_path bevy_crt_galore
+#define_import_path bevy_crt_galore::xor
 
-struct CrtGaloreSettings {
+struct CrtSettings {
 	aberration_amount	: f32,
 	noise_amount		: f32,
 	vignette_amount		: f32,
